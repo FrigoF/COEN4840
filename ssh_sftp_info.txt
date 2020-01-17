@@ -1,0 +1,32 @@
+SFTP:
+===========
+COE-MAC-1864:code frigof$ sftp fred@bloomcounty.eng.mu.edu
+fred@bloomcounty.eng.mu.edu's password: 
+Connected to fred@bloomcounty.eng.mu.edu.
+sftp> cd /var/www/html/fred
+sftp> get index.html
+Fetching /var/www/html/fred/index.html to index.html
+/var/www/html/fred/index.html                 100%  129     2.2KB/s   00:00    
+sftp> exit
+
+
+
+SSH
+===========
+COE-MAC-1864:code frigof$ ssh fred@bloomcounty.eng.mu.edu
+fred@bloomcounty.eng.mu.edu's password: 
+Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-74-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+
+ * Canonical Livepatch is enabled.
+   - All available patches applied.
+
+45 packages can be updated.
+4 updates are security updates.
+
+fred@bloomcounty:~$ ls
+
