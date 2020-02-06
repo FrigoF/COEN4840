@@ -1,6 +1,6 @@
 // client.c - Example of TCP/IP Server using sockets
 //            COEN 4840
-//            02-Feb-2020
+//            05-Feb-2020
 //
 // See:  https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/
 //
@@ -37,10 +37,38 @@ void func(int sockfd)
     } 
 } 
   
-int main() 
+int main(int argc, char *argv[]) 
 { 
     int sockfd, connfd; 
     struct sockaddr_in servaddr, cli; 
+    struct addrinfo hints, *infoptr; 
+    struct addrinfo *p;
+    char host[256];
+
+    // Validate the parameters
+    if (argc != 2) {
+        printf("usage: %s server-name\n", argv[0]);
+        return 1;
+    }
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // use AF_INET6 to force IPv6
+    hints.ai_socktype = SOCK_STREAM;
+
+    int result = getaddrinfo(argv[1], NULL, &hints, &infoptr);
+    if (result) 
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(result));
+        exit(1);
+    }
+
+    for (p = infoptr; p != NULL; p = p->ai_next) 
+    {
+        getnameinfo(p->ai_addr, p->ai_addrlen, host, sizeof (host), NULL, 0, NI_NUMERICHOST);
+        puts(host);
+    }
+    freeaddrinfo(infoptr);
+
   
     // socket create and varification 
     sockfd = socket(AF_INET, SOCK_STREAM, 0); 
@@ -54,7 +82,7 @@ int main()
   
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    servaddr.sin_addr.s_addr = inet_addr(host); 
     servaddr.sin_port = htons(PORT); 
   
     // connect the client socket to server socket 

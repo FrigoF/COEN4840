@@ -1,4 +1,4 @@
-To compile:
+To compile: On Ubuntu
 
 gcc server.c -o server
 
@@ -8,7 +8,7 @@ gcc bloomclient.c -o bloomclient
 
 =====================
 
-$ ./client
+$ ./client bloomcounty.eng.mu.edu
 Socket successfully created..
 connected to the server..
 Enter the string : Hellothere
