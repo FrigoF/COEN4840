@@ -84,6 +84,10 @@ void get_syslog_message( char *tls_syslog_msg )
     
     // Get hostname
     status = gethostname( host_name, MAX);
+    if( status != 0 )
+    {
+        strcpy(host_name, "UNKNOWN");
+    }
    
     printf("Enter the SYSLOG message to send : "); 
     n = 0; 

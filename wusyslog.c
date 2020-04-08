@@ -40,6 +40,8 @@ void func(SOCKET sockfd, struct sockaddr_in *servaddr )
 
     memset(buff, 0, MAX);
     memset(syslog_time, 0, MAX);
+    memset(syslog_msg, 0, MAX);
+
 
     // Obtain current time. 
     current_time = time(NULL);
@@ -50,8 +52,12 @@ void func(SOCKET sockfd, struct sockaddr_in *servaddr )
     
     // Get hostname
     status = gethostname( host_name, MAX);
-	
-	// Enter Message to send to remote SYSLOG
+    if( status != 0 )
+    {
+        strcpy(host_name, "UNKNOWN");
+    }
+
+    // Enter Message to send to remote SYSLOG
     printf("Enter the SYSLOG message to send : "); 
     n = 0; 
     while ((buff[n++] = getchar()) != '\n') 
@@ -72,12 +78,12 @@ int __cdecl main(int argc, char **argv)
 {
     WSADATA wsaData;
     SOCKET SendSocket = INVALID_SOCKET;
-	struct sockaddr_in RecvAddr;
-	struct addrinfo hints, 
-	                *infoptr = NULL,
-					*p = NULL;
+    struct sockaddr_in RecvAddr;
+    struct addrinfo hints, 
+                    *infoptr = NULL,
+                    *p = NULL;
     int iResult;
-	char host[256];
+    char host[256];
     
     // Validate the parameters
     if (argc != 2) {
@@ -121,7 +127,7 @@ int __cdecl main(int argc, char **argv)
         printf("Socket created for remote SYSLOG server: %s \n", host); 
 	
     // assign IP, PORT 
-	memset(&RecvAddr, 0, sizeof(RecvAddr)); 
+    memset(&RecvAddr, 0, sizeof(RecvAddr)); 
     RecvAddr.sin_family = AF_INET; 
     RecvAddr.sin_addr.s_addr = inet_addr(host); 
     RecvAddr.sin_port = htons(PORT); 

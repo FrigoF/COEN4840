@@ -30,6 +30,7 @@ void func(int sockfd, struct sockaddr_in *servaddr)
 
     bzero(buff, MAX);
     bzero(syslog_time, MAX);
+    bzero(syslog_msg, MAX);
 
     // Obtain current time. 
     current_time = time(NULL);
@@ -40,7 +41,10 @@ void func(int sockfd, struct sockaddr_in *servaddr)
     
     // Get hostname
     status = gethostname( host_name, MAX);
-    printf("%s\n", host_name);
+    if( status != 0 )
+    {
+        strcpy(host_name, "UNKNOWN");
+    }
    
     printf("Enter the SYSLOG message to send : "); 
     n = 0; 

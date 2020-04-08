@@ -40,6 +40,7 @@ void func(SOCKET sockfd )
 
     memset(buff, 0, MAX);
     memset(syslog_time, 0, MAX);
+    memset(syslog_msg, 0, MAX);
 
     // Obtain current time. 
     current_time = time(NULL);
@@ -50,8 +51,12 @@ void func(SOCKET sockfd )
     
     // Get hostname
     status = gethostname( host_name, MAX);
+    if( status != 0 )
+    {
+        strcpy(host_name, "UNKNOWN");
+    }
 	
-	// Enter Message to send to remote SYSLOG
+    // Enter Message to send to remote SYSLOG
     printf("Enter the SYSLOG message to send : "); 
     n = 0; 
     while ((buff[n++] = getchar()) != '\n') 
