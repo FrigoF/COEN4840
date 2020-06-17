@@ -22,8 +22,6 @@
 
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT "10514"
-
 #define MAX 256
 
 void func(SOCKET sockfd ) 
@@ -65,7 +63,7 @@ void func(SOCKET sockfd )
 	
     sprintf(syslog_msg, "<%d> %s %s TCP: Windows test_message %s", pri, syslog_time, host_name, buff );
 
-    iResult = send(sockfd, syslog_msg, sizeof(syslog_msg), 0);
+    iResult = send(sockfd, syslog_msg, strlen(syslog_msg), 0);
     if (iResult > 0) 
        printf("SYSLOG message sent: %s\n",syslog_msg);
     else
@@ -85,10 +83,20 @@ int __cdecl main(int argc, char **argv)
     char recvbuf[DEFAULT_BUFLEN];
     int iResult;
     int recvbuflen = DEFAULT_BUFLEN;
-    
-    // Validate the parameters
-    if (argc != 2) {
-        printf("usage: %s server-name\n", argv[0]);
+ 
+    char *hostname, *portnum;
+    if ( argc != 3 )
+    {
+        printf("usage: %s <hostname> <portnum>\n", argv[0]);
+        exit(0);
+    }
+    hostname =  argv[1];
+    portnum = argv[2];
+	
+    /* Initialize Winsock */
+    iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (iResult != 0) {
+        printf("WSAStartup failed with error: %d\n", iResult);
         return 1;
     }
 
@@ -100,12 +108,12 @@ int __cdecl main(int argc, char **argv)
     }
 
     ZeroMemory( &hints, sizeof(hints) );
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_INET;  // AF_UNSPEC
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(argv[1], DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo(hostname, portnum, &hints, &result);
     if ( iResult != 0 ) {
         printf("getaddrinfo failed with error: %d\n", iResult);
         WSACleanup();
