@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#define PORT 8080 
 
 int create_socket(int port)
 {
@@ -95,7 +96,7 @@ int main(int argc, char **argv)
 
     configure_context(ctx);
 
-    sock = create_socket(8080);  // server will listen on port 8080
+    sock = create_socket(PORT);  // server will listen on port 8080
 
     /* Handle connections */
     // while(1) 
@@ -105,7 +106,7 @@ int main(int argc, char **argv)
         SSL *ssl;
         const char reply[] = "Hello from TLS server!\n";
 
-        printf("TLS Server listening...\n");
+        printf("TLS Server listening on port %d...\n", PORT);
         int client = accept(sock, (struct sockaddr*)&addr, &len);
         if (client < 0) {
             perror("Unable to accept");
