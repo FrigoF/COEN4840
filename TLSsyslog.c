@@ -1,10 +1,11 @@
 //  TLSsyslog.c - send message to TLS SYSLOG server 
 //
 //  Marquette University - COEN 4840
+//  Fred J. Frigo
 //  15-Feb-2020
 //
-//  To install OpenSSL see INSTALL at https://www.openssl.org/source/
 //  To compile: gcc -Wall -o TLSsyslog TLSsyslog.c -L/usr/lib -lssl -lcrypto
+//  To install OpenSSL see INSTALL at https://www.openssl.org/source/
 //
 
 #include <stdio.h>
