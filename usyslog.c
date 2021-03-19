@@ -1,7 +1,8 @@
 // usyslog.c - Send message to remote UDP SYSLOG server
-//            COEN 4840
-//            15-Feb-2020
 //
+//     Marquette University - COEN 4840
+//     Fred J. Frigo
+//     18-Mar-2021
 //
 //
 
@@ -19,11 +20,11 @@
 
 void func(int sockfd, struct sockaddr_in *servaddr) 
 { 
-    char syslog_msg[MAX];
+    char syslog_msg[4*MAX];
     char syslog_time[MAX];
     char host_name[MAX];
     char buff[MAX]; 
-    int n, host_name_len, status; 
+    int n, status; 
     int pri = (13*8)+6;  // RFC 3164: priority 13 = log audit, priority = 6 info
     time_t current_time;
     char* c_time_string;
@@ -64,8 +65,8 @@ void func(int sockfd, struct sockaddr_in *servaddr)
   
 int main(int argc, char *argv[]) 
 { 
-    int sockfd, connfd; 
-    struct sockaddr_in servaddr, cli; 
+    int sockfd; 
+    struct sockaddr_in servaddr; 
     struct addrinfo hints, *infoptr; 
     struct addrinfo *p;
     char host[256];
