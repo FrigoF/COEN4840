@@ -1,4 +1,4 @@
-// wclient.c - Example of TCP/IP Server using sockets (Windows)
+// wclient.c - Example of TCP/IP Client using sockets (Windows)
 //            COEN 4840
 //            05-Feb-2020
 //
