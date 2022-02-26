@@ -1,0 +1,10 @@
+all: usyslog tsyslog
+
+usyslog:	usyslog.c
+	gcc -g usyslog.c -o usyslog 
+
+tsyslog:	tsyslog.c
+	gcc -g tsyslog.c -o tsyslog 
+
+clean:
+	rm usyslog tsyslog 
