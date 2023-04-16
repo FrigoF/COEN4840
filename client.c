@@ -35,6 +35,7 @@ void say_hello(int sockfd)
     // Get message
     printf("Enter message to send to server: ");
     fgets(myMessage, sizeof(myMessage), stdin);
+    myMessage[strlen(myMessage)-1] = 0; // get rid of the '/n' character
     
     // Send message to server
     sprintf( buff, "%s from %s on %s\n", myMessage, username, myHost);    
