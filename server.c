@@ -32,7 +32,6 @@ void wait_for_client(int sockfd)
     username = getenv("USER");
     gethostname(myHost, MAX);
     
-
     // Wait for message from a client
     bzero(buff, sizeof(buff)); 
     status = read(sockfd, buff, sizeof(buff)); 
