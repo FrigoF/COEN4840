@@ -1,9 +1,11 @@
 // client.c - Example of TCP/IP Client using sockets
 //            COEN 4840
-//            05-Feb-2020
+//            05-Feb-2020 - terminate client on message “exit” from server
+//            15-Apr-2023 - terminate client after receiving any message from server
 //
 // See:  https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/
 //
+//  To compile: gcc -Wall -o client client.c -lc
 //
 
 #include <netdb.h> 
@@ -13,36 +15,51 @@
 #include <sys/socket.h> 
 #include <unistd.h>
 #include <arpa/inet.h>
-#define MAX 80 
-#define PORT 8080 
+#define MAX 256
+#define PORT 8080   // This client connects on port 8080
 #define SA struct sockaddr 
-void func(int sockfd) 
+
+// Send message to server and wait for response
+void say_hello(int sockfd) 
 { 
-    char buff[MAX]; 
-    int n; 
-    for (;;) { 
-        bzero(buff, sizeof(buff)); 
-        printf("Enter the string : "); 
-        n = 0; 
-        while ((buff[n++] = getchar()) != '\n') 
-            ; 
-        write(sockfd, buff, sizeof(buff)); 
-        bzero(buff, sizeof(buff)); 
-        read(sockfd, buff, sizeof(buff)); 
-        printf("From Server : %s", buff); 
-        if ((strncmp(buff, "exit", 4)) == 0) { 
-            printf("Client Exit...\n"); 
-            break; 
-        } 
-    } 
+    char buff[MAX*3]; 
+    char myHost[MAX];
+    char myMessage[MAX];
+    char *username;
+    int status;
+
+    // Get username and local host name
+    username = getenv("USER");
+    gethostname(myHost, MAX);
+
+    // Get message
+    printf("Enter message to send to server: ");
+    fgets(myMessage, sizeof(myMessage), stdin);
+    
+    // Send message to server
+    sprintf( buff, "%s from %s on %s\n", myMessage, username, myHost);    
+    write(sockfd, buff, sizeof(buff)); 
+
+    // Read response from server, timeout configured with setsockopt()
+    bzero(buff, sizeof(buff)); 
+    status = read(sockfd, buff, sizeof(buff)); 
+    if (status > 0)    
+    {
+        printf("From Server : %s\n", buff); 
+    }
+    else
+    {
+        printf("No response from Server.\n");
+    }
 } 
   
 int main(int argc, char *argv[]) 
 { 
-    int sockfd, connfd; 
-    struct sockaddr_in servaddr, cli; 
+    int sockfd; 
+    struct sockaddr_in servaddr; 
     struct addrinfo hints, *infoptr; 
     struct addrinfo *p;
+    struct timeval tv;
     char host[256];
 
     // Validate the parameters
@@ -65,11 +82,9 @@ int main(int argc, char *argv[])
     for (p = infoptr; p != NULL; p = p->ai_next) 
     {
         getnameinfo(p->ai_addr, p->ai_addrlen, host, sizeof (host), NULL, 0, NI_NUMERICHOST);
-        puts(host);
     }
     freeaddrinfo(infoptr);
 
-  
     // socket create and varification 
     sockfd = socket(AF_INET, SOCK_STREAM, 0); 
     if (sockfd == -1) { 
@@ -78,9 +93,14 @@ int main(int argc, char *argv[])
     } 
     else
         printf("Socket successfully created..\n"); 
-    bzero(&servaddr, sizeof(servaddr)); 
+
+    // Set timeout for socket read
+    tv.tv_sec = 5; // timeout in seconds
+    tv.tv_usec = 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
   
     // assign IP, PORT 
+    bzero(&servaddr, sizeof(servaddr)); 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = inet_addr(host); 
     servaddr.sin_port = htons(PORT); 
@@ -93,8 +113,8 @@ int main(int argc, char *argv[])
     else
         printf("connected to the server..\n"); 
   
-    // function for chat 
-    func(sockfd); 
+    // send message to server & wait for response
+    say_hello(sockfd);
   
     // close the socket 
     close(sockfd); 

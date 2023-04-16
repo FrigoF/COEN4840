@@ -1,10 +1,13 @@
 // server.c - Example of TCP/IP Server using sockets
 //            COEN 4840
-//            02-Feb-2020
+//            02-Feb-2020 - terminate on message “exit” from client
+//            15-Apr-2023 - terminate after receiving any message from client
 //
 // See:  https://www.geeksforgeeks.org/tcp-server-client-implementation-in-c/
 //
+//  To compile: gcc -Wall -o server server.c -lc
 //
+
 #include <stdio.h> 
 #include <netdb.h> 
 #include <netinet/in.h> 
@@ -13,41 +16,36 @@
 #include <sys/socket.h> 
 #include <sys/types.h> 
 #include <unistd.h>
-#define MAX 80 
+#define MAX 256
 #define PORT 8080 
 #define SA struct sockaddr 
   
-// Function designed for chat between client and server. 
-void func(int sockfd) 
+// Wait for a message from a client, respond, then exit
+void wait_for_client(int sockfd) 
 { 
-    char buff[MAX]; 
-    int n; 
-    // infinite loop for chat 
-    for (;;) { 
-        bzero(buff, MAX); 
-  
-        // read the message from client and copy it in buffer 
-        read(sockfd, buff, sizeof(buff)); 
-        // print buffer which contains the client contents 
-        printf("From client: %s\t To client : ", buff); 
-        bzero(buff, MAX); 
-        n = 0; 
-        // copy server message in the buffer 
-        while ((buff[n++] = getchar()) != '\n') 
-            ; 
-  
-        // and send that buffer to client 
-        write(sockfd, buff, sizeof(buff)); 
-  
-        // if msg contains "Exit" then server exit and chat ended. 
-        if (strncmp("exit", buff, 4) == 0) { 
-            printf("Server Exit...\n"); 
-            break; 
-        } 
-    } 
+    char buff[MAX*2]; 
+    char myHost[MAX];
+    char *username;
+    int status;
+
+    // Get username and local host name
+    username = getenv("USER");
+    gethostname(myHost, MAX);
+    
+
+    // Wait for message from a client
+    bzero(buff, sizeof(buff)); 
+    status = read(sockfd, buff, sizeof(buff)); 
+    if (status > 0)    
+    {
+        printf("From Client : %s\n", buff); 
+    }
+    
+    // Send reply to client
+    sprintf( buff, "Message received by %s on %s\n", username, myHost);    
+    write(sockfd, buff, sizeof(buff));  
 } 
-  
-// Driver function 
+
 int main() 
 { 
     int sockfd, connfd, len; 
@@ -62,7 +60,7 @@ int main()
     else
         printf("Socket successfully created..\n"); 
     bzero(&servaddr, sizeof(servaddr)); 
-  
+
     // assign IP, PORT 
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
@@ -82,7 +80,7 @@ int main()
         exit(0); 
     } 
     else
-        printf("Server listening..\n"); 
+        printf("Server listening ...\n"); 
     len = sizeof(cli); 
   
     // Accept the data packet from client and verification 
@@ -95,8 +93,8 @@ int main()
         printf("server acccept the client...\n"); 
   
     // Function for chatting between client and server 
-    func(connfd); 
+    wait_for_client(connfd); 
   
-    // After chatting close the socket 
+    // close the socket 
     close(sockfd); 
 } 
