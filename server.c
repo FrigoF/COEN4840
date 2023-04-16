@@ -91,7 +91,7 @@ int main()
     else
         printf("server acccept the client...\n"); 
   
-    // Function for chatting between client and server 
+    // Function to wait for incoming client message 
     wait_for_client(connfd); 
   
     // close the socket 
