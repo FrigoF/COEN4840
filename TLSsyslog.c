@@ -4,7 +4,7 @@
 //  Fred J. Frigo
 //  15-Feb-2020
 //
-//  To compile: gcc -Wall -o TLSsyslog TLSsyslog.c -L/usr/lib -lssl -lcrypto
+//  To compile: gcc -Wall -o TLSsyslog TLSsyslog.c -lssl -lcrypto -L/usr/local/lib
 //  To install OpenSSL see INSTALL at https://www.openssl.org/source/
 //
 
