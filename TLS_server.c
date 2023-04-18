@@ -7,7 +7,7 @@
 // See https://wiki.openssl.org/index.php/Simple_TLS_Server
 //
 //  To install OpenSSL see INSTALL at https://www.openssl.org/source/
-//  To compile: gcc -Wall -o TLS_server TLS_server.c -L/usr/lib -lssl -lcrypto
+//  To compile: gcc -Wall -o TLS_server TLS_server.c -lssl -lcrypto -L/usr/local/lib
 //
 #include <stdio.h>
 #include <unistd.h>
