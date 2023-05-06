@@ -17,6 +17,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #define PORT 8080 
+#define MAX 256
 
 int create_socket(int port)
 {
@@ -89,7 +90,16 @@ void configure_context(SSL_CTX *ctx)
 int main(int argc, char **argv)
 {
     int sock;
+    int status;
     SSL_CTX *ctx;
+    struct sockaddr_in addr;
+    uint len = sizeof(addr);
+    SSL *ssl;
+    char incoming_msg[1024] = {0};
+    char reply[MAX*3]; 
+    char myHost[MAX];
+    char myMessage[] = {"Hello from TLS Server"};
+    char *username;
 
     init_openssl();
     ctx = create_context();
@@ -99,32 +109,36 @@ int main(int argc, char **argv)
     sock = create_socket(PORT);  // server will listen on port 8080
 
     /* Handle connections */
-    // while(1) 
-    {
-        struct sockaddr_in addr;
-        uint len = sizeof(addr);
-        SSL *ssl;
-        const char reply[] = "Hello from TLS server!\n";
+    printf("TLS Server listening on port %d...\n", PORT);
+    int client = accept(sock, (struct sockaddr*)&addr, &len);
+    if (client < 0) {
+         perror("Unable to accept");
+         exit(EXIT_FAILURE);
+    }
 
-        printf("TLS Server listening on port %d...\n", PORT);
-        int client = accept(sock, (struct sockaddr*)&addr, &len);
-        if (client < 0) {
-            perror("Unable to accept");
-            exit(EXIT_FAILURE);
-        }
+    ssl = SSL_new(ctx);
+    SSL_set_fd(ssl, client);
 
-        ssl = SSL_new(ctx);
-        SSL_set_fd(ssl, client);
-
-        if (SSL_accept(ssl) <= 0) {
-            ERR_print_errors_fp(stderr);
-        }
-        else {
-            SSL_write(ssl, reply, strlen(reply));
-        }
-
+    if (SSL_accept(ssl) <= 0) {
+         ERR_print_errors_fp(stderr);
+    }
+     else {
         printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
-        printf("Server complete.\n");
+        // Read incoming message from client
+        status = SSL_read(ssl, incoming_msg, sizeof(incoming_msg));
+
+        if(status > 0) {
+            // Print message from client		
+	    printf("%s\n", incoming_msg);
+	    
+            // Get username and local host name
+            username = getenv("USER");
+            gethostname(myHost, MAX);
+
+           // Reply with message to client 
+           sprintf( reply, "%s started by %s on %s\n", myMessage, username, myHost);    
+           SSL_write(ssl, reply, strlen(reply));
+        }
 
         SSL_shutdown(ssl);
         SSL_free(ssl);

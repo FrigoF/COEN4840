@@ -4,7 +4,7 @@
 // Fred J. Frigo
 // 13-Mar-2021
 //
-// See https://wiki.openssl.org/index.php/Simple_TLS_Server
+// 06-May-2023 - Updated to send message to server 
 //
 //  To install OpenSSL see INSTALL at https://www.openssl.org/source/
 //  To compile: gcc -Wall -o TLS_client TLS_client.c -lssl -lcrypto -L/usr/local/lib
@@ -21,6 +21,42 @@
 #include <openssl/err.h> 
 
 #define FAIL -1
+#define MAX 256
+
+// Send message to server and wait for response
+void say_hello(SSL *ssl)
+{
+    char buff[MAX*3];
+    char myHost[MAX];
+    char myMessage[MAX];
+    char *username;
+    int status;
+
+    // Get username and local host name
+    username = getenv("USER");
+    gethostname(myHost, MAX);
+
+    // Get message
+    printf("Enter message to send to server: ");
+    fgets(myMessage, sizeof(myMessage), stdin);
+    myMessage[strlen(myMessage)-1] = 0; // get rid of the '/n' character
+
+    // Send message to server
+    sprintf( buff, "%s :: from %s on %s\n", myMessage, username, myHost);
+    SSL_write(ssl, buff, sizeof(buff));
+
+    // Read response from server 
+    bzero(buff, sizeof(buff));
+    status = SSL_read(ssl, buff, sizeof(buff));
+    if (status > 0)
+    {
+        printf("From Server : %s\n", buff);
+    }
+    else
+    {
+        printf("No response from Server.\n");
+    }
+}
  
 int OpenConnection(const char *hostname, int port)
 {
@@ -89,7 +125,6 @@ int main(int arc, char *argv[])
     SSL_CTX *ctx;
     int server;
     SSL *ssl;
-    char server_message[1024] = {0};
 
     char *hostname, *portnum;
     if ( arc != 3 )
@@ -112,8 +147,9 @@ int main(int arc, char *argv[])
         printf("Connected with %s encryption\n", SSL_get_cipher(ssl));
         ShowCerts(ssl);        /* get any certs */
 
-        SSL_read(ssl, server_message, sizeof(server_message));   /* read message */
-        printf("%s\n", server_message);
+        /* send message to server  */
+        say_hello(ssl);
+
         SSL_shutdown(ssl);        /* release connection state */
     }
     close(server);         /* close socket */
