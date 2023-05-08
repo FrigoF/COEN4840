@@ -4,6 +4,9 @@
 //     Fred J. Frigo
 //     18-Mar-2021
 //
+//     07-May-2023 - Updates for RFC 5424 format
+//
+// To compile: gcc -Wall -o usyslog usyslog.c
 //
 
 #include <netdb.h> 
@@ -20,41 +23,53 @@
 
 void func(int sockfd, struct sockaddr_in *servaddr) 
 { 
-    char syslog_msg[4*MAX];
-    char syslog_time[MAX];
-    char host_name[MAX];
-    char buff[MAX]; 
-    int n, status; 
-    int pri = (13*8)+6;  // RFC 3164: priority 13 = log audit, priority = 6 info
-    time_t current_time;
+    char rfc3164_syslog_msg[4*MAX];
+    char rfc5424_syslog_msg[4*MAX];
+    char *syslog_msg;
+    char rfc3164_time[MAX];
+    char rfc5424_time[MAX];
+    char myHost[MAX];
+    char myMessage[MAX];
+    char *username;
+    int pri = (13*8)+6;  // RFC 3164: priority 13 = log audit, priority = 6 infoa
+    int version = 1;     // RFC 5424: version
+    struct timespec current_time;
+    int pid, usec;
+    struct tm *time;
+    int tz_hour, tz_min; 
     char* c_time_string;
 
-    bzero(buff, MAX);
-    bzero(syslog_time, MAX);
-    bzero(syslog_msg, MAX);
+    // Get username and local host name
+    username = getenv("USER");
+    gethostname(myHost, MAX);
+
+    // Get message
+    printf("Enter message to send to server: ");
+    fgets(myMessage, sizeof(myMessage), stdin);
+    myMessage[strlen(myMessage)-1] = 0; // get rid of the '/n' character
 
     // Obtain current time. 
-    current_time = time(NULL);
+    clock_gettime( CLOCK_REALTIME, &current_time);
 
-    // Convert to local time format. 
-    c_time_string = ctime(&current_time);
-    strncpy(syslog_time, &c_time_string[4], 15);  // copy only characters needed
-    
-    // Get hostname
-    status = gethostname( host_name, MAX);
-    if( status != 0 )
-    {
-        strcpy(host_name, "UNKNOWN");
-    }
-   
-    printf("Enter the SYSLOG message to send : "); 
-    n = 0; 
-    while ((buff[n++] = getchar()) != '\n') 
-        ;
-    buff[n-1]= '\0'; // remove the new line at end of string 
+    // RFC 3164 message 
+    c_time_string = ctime(&current_time.tv_sec);
+    strncpy(rfc3164_time, &c_time_string[4], 15);  // copy only characters needed
+    sprintf(rfc3164_syslog_msg, "<%d>%s %s UDP: RFC3164 message from %s: %s", pri, rfc3164_time, myHost, username, myMessage );
 
-    sprintf(syslog_msg, "<%d> %s %s UDP:test_message %s", pri, syslog_time, host_name, buff );
+    // RFC 5425 message with NO Structured Data
+    time = localtime(&current_time.tv_sec);
+    tz_hour = (int)(time->tm_gmtoff/(60*60)); 
+    tz_min = (int)(abs(time->tm_gmtoff/60) - abs(tz_hour*60));
+    pid = (int)getpid();
+    usec = (int)current_time.tv_nsec/1000;
+    sprintf(rfc5424_time,"%4.4d%c%2.2d%c%2.2dT%2.2d:%2.2d:%2.2d.%6.6d%+2.2d:%2.2d",
+       time->tm_year+1900, '-', time->tm_mon+1, '-', time->tm_mday, time->tm_hour, time->tm_min, time->tm_sec, usec, tz_hour, tz_min ); 
+    sprintf(rfc5424_syslog_msg, "<%d>%d %s %s UDP %s %d %c RFC5424 message from %s: %s", 
+       pri, version, rfc5424_time, myHost, "usyslog", pid, '-', username,  myMessage );
 
+    // Send Syslog mesage
+    //syslog_msg = rfc3164_syslog_msg;
+    syslog_msg = rfc5424_syslog_msg;
     sendto(sockfd, (const char *)syslog_msg, strlen(syslog_msg), 
         MSG_DONTWAIT, (const struct sockaddr *) servaddr,  
         sizeof(struct sockaddr_in));     
