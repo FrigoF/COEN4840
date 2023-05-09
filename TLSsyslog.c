@@ -3,6 +3,7 @@
 //  Marquette University - COEN 4840
 //  Fred J. Frigo
 //  15-Feb-2020
+//  09-May-2023  - Updates for RFC 5424 message format
 //
 //  To compile: gcc -Wall -o TLSsyslog TLSsyslog.c -lssl -lcrypto -L/usr/local/lib
 //  To install OpenSSL see INSTALL at https://www.openssl.org/source/
@@ -24,43 +25,49 @@
 
 void get_syslog_message( char *tls_syslog_msg ) 
 { 
-    char syslog_time[MAX];
-    char host_name[MAX];
-    char buff[MAX]; 
-    int n, status; 
-    int pri = (13*8)+6;  // RFC 5424: priority 13 = log audit, priority = 6 info
-    time_t current_time;
+    char rfc3164_syslog_msg[4*MAX];
+    char rfc3164_time[MAX];
+    char rfc5424_time[MAX];
+    char myHost[MAX];
+    char myMessage[MAX];
+    char *username;
+    int pri = (13*8)+6;  // RFC 3164: priority 13 = log audit, priority = 6 infoa
+    int version = 1;     // RFC 5424: version
+    struct timespec current_time;
+    int pid, usec;
+    struct tm *time;
+    int tz_hour, tz_min; 
     char* c_time_string;
 
-    bzero(buff, MAX);
-    bzero(syslog_time, MAX);
+    // Get username and local host name
+    username = getenv("USER");
+    gethostname(myHost, MAX);
+
+    // Get message
+    printf("Enter message to send to server: ");
+    fgets(myMessage, sizeof(myMessage), stdin);
+    myMessage[strlen(myMessage)-1] = 0; // get rid of the '/n' character
 
     // Obtain current time. 
-    current_time = time(NULL);
+    clock_gettime( CLOCK_REALTIME, &current_time);
 
-    // Convert to local time format. 
-    c_time_string = ctime(&current_time);
-    strncpy(syslog_time, &c_time_string[4], 15);  // copy only characters needed
-    
-    // Get hostname
-    status = gethostname( host_name, MAX);
-    if( status != 0 )
-    {
-        strcpy(host_name, "UNKNOWN");
-    }
-   
-    printf("Enter the SYSLOG message to send : "); 
-    n = 0; 
-    while ((buff[n++] = getchar()) != '\n') 
-        ;
-    buff[n-1]= '\0'; // remove the new line at end of string 
+    // RFC 3164 message 
+    c_time_string = ctime(&current_time.tv_sec);
+    strncpy(rfc3164_time, &c_time_string[4], 15);  // copy only characters needed
+    sprintf(rfc3164_syslog_msg, "<%d>%s %s TLS: RFC3164 message from %s: %s", pri, rfc3164_time, myHost, username, myMessage );
 
-    sprintf(tls_syslog_msg, "<%d> %s %s TLS:test_message %s", pri, syslog_time, host_name, buff );
-    printf("Secure SYSLOG message: %s\n",tls_syslog_msg);
-
+    // RFC 5425 message with NO Structured Data
+    time = localtime(&current_time.tv_sec);
+    tz_hour = (int)(time->tm_gmtoff/(60*60)); 
+    tz_min = (int)(labs(time->tm_gmtoff/60) - labs(tz_hour*60));
+    pid = (int)getpid();
+    usec = (int)current_time.tv_nsec/1000;
+    sprintf(rfc5424_time,"%4.4d%c%2.2d%c%2.2dT%2.2d:%2.2d:%2.2d.%6.6d%+2.2d:%2.2d",
+       time->tm_year+1900, '-', time->tm_mon+1, '-', time->tm_mday, time->tm_hour, time->tm_min, time->tm_sec, usec, tz_hour, tz_min ); 
+    sprintf(tls_syslog_msg, "<%d>%d %s %s TLS %s %d %c RFC5424 message from %s: %s", 
+       pri, version, rfc5424_time, myHost, "TLSsyslog", pid, '-', username,  myMessage );
 } 
 
- 
 int OpenConnection(const char *hostname, int port)
 {
     int sd;
