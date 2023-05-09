@@ -110,7 +110,6 @@ int main(int argc, char *argv[])
     }
     freeaddrinfo(infoptr);
 
-  
     // socket create and varification 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0); 
     if (sockfd == -1) { 
@@ -125,7 +124,6 @@ int main(int argc, char *argv[])
     servaddr.sin_family = AF_INET; 
     servaddr.sin_addr.s_addr = inet_addr(host); 
     servaddr.sin_port = htons(PORT); 
-  
   
     // function to ask user to input the test message
     func(sockfd, &servaddr); 
