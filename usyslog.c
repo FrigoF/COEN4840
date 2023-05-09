@@ -59,7 +59,7 @@ void func(int sockfd, struct sockaddr_in *servaddr)
     // RFC 5425 message with NO Structured Data
     time = localtime(&current_time.tv_sec);
     tz_hour = (int)(time->tm_gmtoff/(60*60)); 
-    tz_min = (int)(abs(time->tm_gmtoff/60) - abs(tz_hour*60));
+    tz_min = (int)(labs(time->tm_gmtoff/60) - labs(tz_hour*60));
     pid = (int)getpid();
     usec = (int)current_time.tv_nsec/1000;
     sprintf(rfc5424_time,"%4.4d%c%2.2d%c%2.2dT%2.2d:%2.2d:%2.2d.%6.6d%+2.2d:%2.2d",
