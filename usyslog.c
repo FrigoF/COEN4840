@@ -4,7 +4,7 @@
 //     Fred J. Frigo
 //     18-Mar-2021
 //
-//     07-May-2023 - Updates for RFC 5424 format
+//     09-May-2023 - Updates for RFC 5424 format
 //
 // To compile: gcc -Wall -o usyslog usyslog.c
 //
