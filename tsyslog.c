@@ -50,12 +50,12 @@ void func(int sockfd)
     // Obtain current time. 
     clock_gettime( CLOCK_REALTIME, &current_time);
 
-    // RFC 3164 message 
+    // RFC 3164 message (not used)
     c_time_string = ctime(&current_time.tv_sec);
     strncpy(rfc3164_time, &c_time_string[4], 15);  // copy only characters needed
     sprintf(rfc3164_syslog_msg, "<%d>%s %s TCP: RFC3164 message from %s: %s", pri, rfc3164_time, myHost, username, myMessage );
 
-    // RFC 5425 message with NO Structured Data
+    // RFC 5424 message with NO Structured Data
     time = localtime(&current_time.tv_sec);
     tz_hour = (int)(time->tm_gmtoff/(60*60)); 
     tz_min = (int)(labs(time->tm_gmtoff/60) - labs(tz_hour*60));
